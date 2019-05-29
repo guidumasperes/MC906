@@ -19,38 +19,42 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-
 bird = vector(0, 0)
 balls = []
 
+
 def fuzzy_play():
-    teto = ctrl.Antecedent(np.arange(-201, 201, 1), 'teto')
-    chao = ctrl.Antecedent(np.arange(-201, 201, 1), 'chao')
-    press = ctrl.Consequent(np.arange(0, 2, 1), 'press')
-    teto.automf(3)
-    chao.automf(3)
-    press['no'] = fuzz.trimf(press.universe, [0, 0, 1]) #talvez de merda aqui#
-    press['yes'] = fuzz.trimf(press.universe, [0, 1, 1])
-    rule1 = ctrl.Rule(teto['good'], press['no'])
-    rule2 = ctrl.Rule(chao['poor'], press['yes'])
-    pressing_ctrl = ctrl.ControlSystem([rule1, rule2])
+    wall = ctrl.Antecedent(np.arange(-201, 201, 1), 'wall')
+    press = ctrl.Consequent(np.arange(0, 1.25, 0.25), 'press')
+    wall.automf(3)
+
+    press['no'] = fuzz.trimf(press.universe, [0, 0, 0.5])  # talvez de merda aqui#
+    press["maybe"] = fuzz.trimf(press.universe, [0, 0.5, 1])
+    press['yes'] = fuzz.trimf(press.universe, [0.5, 1, 1])
+
+    rule1 = ctrl.Rule(wall['good'], press['no'])
+    rule2 = ctrl.Rule(wall['poor'], press['yes'])
+    rule3 = ctrl.Rule(wall['average'], press['no'])
+    pressing_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
     pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
     print('bird.y = ', bird.y)
-    pressing.input['teto'] = bird.y
-    pressing.input['chao'] = bird.y
+    pressing.input['wall'] = bird.y
     pressing.compute()
     print(pressing.output['press'])
     if pressing.output['press'] > 0.6:
         tap()
+
 
 def tap():
     "Move bird up in response to screen tap."
     up = vector(0, 30)
     bird.move(up)
 
+
 def inside(point):
     "Return True if point on screen."
     return -200 < point.x < 200 and -200 < point.y < 200
+
 
 def draw(alive):
     "Draw screen objects."
@@ -68,6 +72,7 @@ def draw(alive):
         dot(20, 'black')
 
     update()
+
 
 def move():
     "Update object positions."
@@ -96,6 +101,7 @@ def move():
     draw(True)
     fuzzy_play()
     ontimer(move, 50)
+
 
 setup(420, 420, 370, 0)
 hideturtle()
