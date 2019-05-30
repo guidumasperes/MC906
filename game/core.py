@@ -17,14 +17,15 @@ rights reserved and for educational purposes was modified to implement fuzzy log
 from random import randrange
 from turtle import *
 from freegames import vector
-import numpy as np
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
+from game.fuzzy_player import BasePlayer
 
 
 class Game:
-    def __init__(self, ceil, ground, vy, tapY_mov, obstacle_diameter, refresh_timeout_ms, obstac_spawn_rate, obstacle_speed):
-        self.bird = vector(0, 0)
+    FLAPPY_DIAMETER = 10
+    #spawn rate = 0 a 10 (0% a 100%) inteiros
+    def __init__(self, ceil, ground, vy, tapY_mov, obstacle_diameter, refresh_timeout_ms, obstac_spawn_rate, obstacle_speed, birdx, birdy, proximity_threshold):
+        self.bird = vector(birdx, birdy)
+        self.proximity_threshold = proximity_threshold
         self.balls = []
         self.ceil = ceil
         self.ground = ground
@@ -34,27 +35,10 @@ class Game:
         self.refresh_timeout_ms = refresh_timeout_ms
         self.obsta_spawn_rate = obstac_spawn_rate
         self.obstacle_speed = obstacle_speed
+        self.player = BasePlayer(self)
 
-    def play(self, player):
-        wall = ctrl.Antecedent(np.arange(-201, 201, 1), 'wall')
-        press = ctrl.Consequent(np.arange(0, 1.25, 0.25), 'press')
-        wall.automf(3)
-
-        press['no'] = fuzz.trimf(press.universe, [0, 0, 0.5])  # talvez de merda aqui#
-        press["maybe"] = fuzz.trimf(press.universe, [0, 0.5, 1])
-        press['yes'] = fuzz.trimf(press.universe, [0.5, 1, 1])
-
-        rule1 = ctrl.Rule(wall['good'], press['no'])
-        rule2 = ctrl.Rule(wall['poor'], press['yes'])
-        rule3 = ctrl.Rule(wall['average'], press['no'])
-        pressing_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
-        pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
-        print('bird.y = ', self.bird.y)
-        pressing.input['wall'] = self.bird.y
-        pressing.compute()
-        print(pressing.output['press'])
-        if pressing.output['press'] > 0.6:
-            self.tap()
+    def play(self):
+        self.player.perform_a_play()
 
     # initially, by deafault, the balls that are considered a threaten to 'flappy' are only the
     # ones in the range of colision only taking the X coordinate into account.
@@ -75,47 +59,48 @@ class Game:
         goto(self.bird.x, self.bird.y)
 
         if alive:
-            dot(10, 'green')
+            dot(self.FLAPPY_DIAMETER, 'green')
         else:
-            dot(10, 'red')
+            dot(self.FLAPPY_DIAMETER, 'red')
 
-        for ball in balls:
+        for ball in self.balls:
             goto(ball.x, ball.y)
-            dot(20, 'black')
+            dot(self.obstacle_diam, 'black')
 
         update()
 
     def move(self):
         "Update object positions."
-        self.bird.y -= 5
+        self.bird.y += self.vy # -5
 
         for ball in self.balls:
-            ball.x -= 3
+            ball.x += self.obstacle_speed #-3
 
-        if randrange(10) == 0:
-            y = randrange(-199, 199)
+        if randrange(11) <= self.obsta_spawn_rate:
+            y = randrange(self.ground+1, self.ceil-1)
             ball = vector(199, y)
             self.balls.append(ball)
 
         while len(self.balls) > 0 and not inside(self.balls[0]):
             self.balls.pop(0)
 
-        if not inside(bird):
+        if not self.inside(self.bird):
             draw(False)
             return
 
         for ball in self.balls:
-            if abs(ball - self.bird) < 15:
+            if abs(ball - self.bird) < self.obstacle_diam/2 + self.proximity_threshold:
                 draw(False)
                 return
 
-        draw(True)
-        fuzzy_play()
+        self.draw(True)
+        self.play()
         ontimer(move, self.refresh_timeout_ms)
 
-    setup(420, 420, 370, 0)
-    hideturtle()
-    up()
-    tracer(False)
-    move()
-    done()
+    def main_looop(self):
+        setup(420, 420, 370, 0)
+        hideturtle()
+        up()
+        tracer(False)
+        self.move()
+        done()

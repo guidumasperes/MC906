@@ -1,22 +1,20 @@
 # the idea here is to make many players , not just one, in order to test different approaches.
 
-from self.game.core import self.game
+
 import skfuzzy as fuzz
 import numpy as np
 from skfuzzy import control as ctrl
-from freeself.games import vector
+from freegames import vector
 
 
 # this player doesn'take left movimentation in account when making a decision.
 class BasePlayer:
 
-    def __init__(self, game, proximity_threshold):
-        self.game = self.game
+    def __init__(self, game):
+        self.game = game
         self.wall = self._wall_antecedent()
-        self.tap_ball_threat, self.no_tap_ball_threat = self._threatening_balls_antecedents(proximity_threshold)
+        self.tap_ball_threat, self.no_tap_ball_threat = self._threatening_balls_antecedents(game.proximity_threshold)
         self.rules = []
-
-    # in a risky threshold , wall > ball proximity > ball density
 
     def perform_a_play(self):
         self.proximity = self._ball_proximity_antecedent()
@@ -27,19 +25,19 @@ class BasePlayer:
         rules = self.generate_rules(press)
         pressing_ctrl = ctrl.ControlSystem(rules)
         pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
-
         pressing.input['wall'] = self.game.bird.y
+        no_tap_dist, tap_dist = self._distance_nearest_ball()
 
-        # pressing.input['no_tap_bad'] # parameter = the distance to the nearest ball if no tap is performed
-        # pressing.input['tap_bad']   # parameter =  the distance to the nearest ball if tap no tap is performed
-        # pressing.input['proximity'] # proximity = the actual sum of the distance to all points
+        pressing.input[
+            'no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
+        pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
+        pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird,
+                                                                      after_timeout=False)  # proximity = the actual sum of the distance to all points
 
         pressing.compute()
         print(pressing.output['press'])
         if pressing.output['press'] > 0.6:
             self.game.tap()
-
-    pass
 
     def _wall_antecedent(self):
         wall = ctrl.Antecedent(np.arange(self.game.ground, self.game.ceil, 1), "wall")
@@ -70,13 +68,7 @@ class BasePlayer:
         return proximity
 
     def _threatening_balls_antecedents(self, proximity_threshold):
-        proximity_range = self.self.game.obstacle_diam / 2 + proximity_threshold
-        # no_tap_threat_filter = lambda ball: absolute_distance(tap_option_no, ball) < proximity_range
-        # tap_threat_filter = lambda ball: absolute_distance(tap_option_yes, ball) < proximity_range
-        # no_tap_threats = filter(no_tap_threat_filter, self.game.balls)
-        # tap_threats = filter(tap_threat_filter, self.game.balls)
-        # if len(no_tap_threats) != 0:
-        # 1/4  = 1 proximity range?
+        proximity_range = self.game.obstacle_diam / 2 + proximity_threshold
         no_tap_ball_threat = ctrl.Antecedent(np.arange(0, proximity_range * 4, proximity_range), 'no_tap_bad')
         no_tap_ball_threat.automf(3)
         tap_threat = ctrl.Antecedent(np.arange(0, proximity_range * 4, proximity_range), 'tap_bad')
@@ -90,7 +82,10 @@ class BasePlayer:
         absolute_distance_tp_no = lambda ball: abs(ball - tap_option_no)
         absolute_distance_tp_yes = lambda ball: abs(ball - tap_option_yes)
         balls_after_tic = map(lambda ball: ball + (self.game.obstacle_speed, 0))
-        min(balls_after_tic, )
+
+        no_tap_dist = min(balls_after_tic, key=absolute_distance_tp_no)
+        tap_dist = min(balls_after_tic, key=absolute_distance_tp_yes)
+        return no_tap_dist, tap_dist
 
     def generate_rules(self, press):
         no_tap_bad_rule = ctrl.Rule(self.no_tap_ball_threat['good'], press['yes'])
@@ -111,8 +106,3 @@ class BasePlayer:
                 ball_after_tick = ball
             dist += abs(ball_after_tick - bird)
         return dist
-
-
-# in this class we need to consider the possibility of the bird to perform a left movement, this is the only difference
-class AdvancedPlayer(BasePlayer):
-    pass
