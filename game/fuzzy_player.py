@@ -27,15 +27,13 @@ class BasePlayer:
         pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
         pressing.input['wall'] = self.game.bird.y
         no_tap_dist, tap_dist = self._distance_nearest_ball()
-
         pressing.input['no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
         pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
-        if self.ball_rendered:
-            pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
-
+        pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
         pressing.compute()
         print(pressing.output['press'])
-        if pressing.output['press'] > 0.6:
+        press.view(sim=pressing)
+        if pressing.output['press'] > 0.5:
             self.game.tap()
 
     def _wall_antecedent(self):
@@ -53,12 +51,8 @@ class BasePlayer:
         distance_with_tap = self._sum_distance_to_obstacles(bird_after_tap, True)
         bird_after_no_tap = self.game.bird + vector(0, self.game.vy)
         distance_without_tap = self._sum_distance_to_obstacles(bird_after_no_tap, True)
-        self.ball_rendered = True
-        self.lesser_proximity_tap = False
 
-        if distance_without_tap == 0 or distance_with_tap == 0:
-            self.ball_rendered = False
-            return None
+        self.lesser_proximity_tap = False
 
         if distance_without_tap > distance_with_tap:
             proximity = ctrl.Antecedent(np.arange(0, distance_without_tap, distance_with_tap), 'proximity')
@@ -96,10 +90,8 @@ class BasePlayer:
         wall_rule_2 = ctrl.Rule(self.wall['good'], press['no'])
         composed_proximity_predicate = self.tap_ball_threat['average'] and self.no_tap_ball_threat['average']
         conditionalTap = press["yes"] if self.lesser_proximity_tap else press["no"]
-        rules = [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2]
-        if self.ball_rendered:
-            proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
-            rules.append(proximity_rule)
+        proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
+        rules = [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2, proximity_rule]
         return rules
 
     def _sum_distance_to_obstacles(self, bird, after_timeout=False):
