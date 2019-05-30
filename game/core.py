@@ -78,14 +78,14 @@ class Game:
 
         if randrange(11) <= self.obsta_spawn_rate:
             y = randrange(self.ground+1, self.ceil-1)
-            ball = vector(199, y)
+            ball = vector(self.ground-1, y)
             self.balls.append(ball)
 
-        while len(self.balls) > 0 and not inside(self.balls[0]):
+        while len(self.balls) > 0 and not self.inside(self.balls[0]):
             self.balls.pop(0)
 
         if not self.inside(self.bird):
-            draw(False)
+            self.draw(False)
             return
 
         for ball in self.balls:
@@ -95,12 +95,15 @@ class Game:
 
         self.draw(True)
         self.play()
-        ontimer(move, self.refresh_timeout_ms)
+        ontimer(self.move, self.refresh_timeout_ms)
 
     def main_looop(self):
         setup(420, 420, 370, 0)
         hideturtle()
         up()
         tracer(False)
+        y = randrange(self.ground + 1, self.ceil - 1)
+        ball = vector(self.ceil-1, y)
+        self.balls.append(ball)
         self.move()
         done()

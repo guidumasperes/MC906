@@ -28,11 +28,10 @@ class BasePlayer:
         pressing.input['wall'] = self.game.bird.y
         no_tap_dist, tap_dist = self._distance_nearest_ball()
 
-        pressing.input[
-            'no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
+        pressing.input['no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
         pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
-        pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird,
-                                                                      after_timeout=False)  # proximity = the actual sum of the distance to all points
+        if self.ball_rendered:
+            pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
 
         pressing.compute()
         print(pressing.output['press'])
@@ -50,12 +49,16 @@ class BasePlayer:
     # the the minimal interval is the min dont tap variation and the maximum is the tap variation, the step is one
 
     def _ball_proximity_antecedent(self):
-        bird_after_tap = self.game.bird + (0, self.game.vy + self.game.tapY_mov)
-        distance_with_tap = self._sum_distance_to_obstacles(self.game, bird_after_tap, True)
-        bird_after_no_tap = self.game.bird + (0, self.game.vy)
-        distance_without_tap = self._sum_distance_to_obstacles(self.game, bird_after_no_tap, True)
-
+        bird_after_tap = self.game.bird + vector(0, self.game.vy + self.game.tapY_mov)
+        distance_with_tap = self._sum_distance_to_obstacles(bird_after_tap, True)
+        bird_after_no_tap = self.game.bird + vector(0, self.game.vy)
+        distance_without_tap = self._sum_distance_to_obstacles(bird_after_no_tap, True)
+        self.ball_rendered = True
         self.lesser_proximity_tap = False
+
+        if distance_without_tap == 0 or distance_with_tap == 0:
+            self.ball_rendered = False
+            return None
 
         if distance_without_tap > distance_with_tap:
             proximity = ctrl.Antecedent(np.arange(0, distance_without_tap, distance_with_tap), 'proximity')
@@ -81,10 +84,9 @@ class BasePlayer:
 
         absolute_distance_tp_no = lambda ball: abs(ball - tap_option_no)
         absolute_distance_tp_yes = lambda ball: abs(ball - tap_option_yes)
-        balls_after_tic = map(lambda ball: ball + (self.game.obstacle_speed, 0))
-
-        no_tap_dist = min(balls_after_tic, key=absolute_distance_tp_no)
-        tap_dist = min(balls_after_tic, key=absolute_distance_tp_yes)
+        balls_after_tic = list(map(lambda ball: ball + vector(self.game.obstacle_speed, 0), self.game.balls))
+        no_tap_dist = abs(min(balls_after_tic, key=absolute_distance_tp_no))
+        tap_dist = abs(min(balls_after_tic, key=absolute_distance_tp_yes))
         return no_tap_dist, tap_dist
 
     def generate_rules(self, press):
@@ -94,14 +96,17 @@ class BasePlayer:
         wall_rule_2 = ctrl.Rule(self.wall['good'], press['no'])
         composed_proximity_predicate = self.tap_ball_threat['average'] and self.no_tap_ball_threat['average']
         conditionalTap = press["yes"] if self.lesser_proximity_tap else press["no"]
-        proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
-        return [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2, proximity_rule]
+        rules = [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2]
+        if self.ball_rendered:
+            proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
+            rules.append(proximity_rule)
+        return rules
 
     def _sum_distance_to_obstacles(self, bird, after_timeout=False):
         dist = 0
         for ball in self.game.balls:
             if after_timeout:
-                ball_after_tick = ball + (self.game.obstacle_speed, 0)
+                ball_after_tick = ball + vector(self.game.obstacle_speed, 0)
             else:
                 ball_after_tick = ball
             dist += abs(ball_after_tick - bird)
