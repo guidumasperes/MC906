@@ -78,7 +78,7 @@ class Game:
 
         if randrange(11) <= self.obsta_spawn_rate:
             y = randrange(self.ground+1, self.ceil-1)
-            ball = vector(self.ground-1, y)
+            ball = vector(self.ceil-1, y)
             self.balls.append(ball)
 
         while len(self.balls) > 0 and not self.inside(self.balls[0]):
