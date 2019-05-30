@@ -12,6 +12,7 @@ The original code for this game is property of Grant Jenks https://github.com/gr
 rights reserved and for educational purposes was modified to implement fuzzy logic control system
 
 """
+from random import randint
 from random import *
 from turtle import *
 from freegames import vector
@@ -34,7 +35,7 @@ def fuzzy_play():
 
     rule1 = ctrl.Rule(wall['good'], press['no'])
     rule2 = ctrl.Rule(wall['poor'], press['yes'])
-    rule3 = ctrl.Rule(wall['average'], press['no'])
+    rule3 = ctrl.Rule(wall['average'], press['no'] if randint(0, 1) == 0 else press['yes'])
     pressing_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
     pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
     print('bird.y = ', bird.y)
@@ -43,6 +44,9 @@ def fuzzy_play():
     print(pressing.output['press'])
     if pressing.output['press'] > 0.6:
         tap()
+
+#initially, by deafault, the balls that are considered a threaten to 'flappy' are only the
+#ones in the range of colision only taking the X coordinate into account.
 
 
 def tap():
@@ -72,6 +76,7 @@ def draw(alive):
         dot(20, 'black')
 
     update()
+
 
 
 def move():
