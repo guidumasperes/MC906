@@ -32,7 +32,6 @@ class BasePlayer:
         pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
         pressing.compute()
         print(pressing.output['press'])
-        press.view(sim=pressing)
         if pressing.output['press'] > 0.5:
             self.game.tap()
 
@@ -52,14 +51,15 @@ class BasePlayer:
         bird_after_no_tap = self.game.bird + vector(0, self.game.vy)
         distance_without_tap = self._sum_distance_to_obstacles(bird_after_no_tap, True)
 
-        self.lesser_proximity_tap = False
+        self.greater_distance_tap = False
 
         if distance_without_tap > distance_with_tap:
             proximity = ctrl.Antecedent(np.arange(0, distance_without_tap, distance_with_tap), 'proximity')
 
+
         else:
             proximity = ctrl.Antecedent(np.arange(0, distance_with_tap, distance_without_tap), 'proximity')
-            self.lesser_proximity_tap = True
+            self.greater_distance_tap = True
 
         proximity.automf(3)
         return proximity
@@ -75,7 +75,6 @@ class BasePlayer:
     def _distance_nearest_ball(self):
         tap_option_no = vector(self.game.bird.x, self.game.bird.y + self.game.vy)
         tap_option_yes = vector(self.game.bird.x, self.game.bird.y + self.game.vy + self.game.tapY_mov)
-
         absolute_distance_tp_no = lambda ball: abs(ball - tap_option_no)
         absolute_distance_tp_yes = lambda ball: abs(ball - tap_option_yes)
         balls_after_tic = list(map(lambda ball: ball + vector(self.game.obstacle_speed, 0), self.game.balls))
@@ -84,12 +83,12 @@ class BasePlayer:
         return no_tap_dist, tap_dist
 
     def generate_rules(self, press):
-        no_tap_bad_rule = ctrl.Rule(self.no_tap_ball_threat['good'], press['yes'])
-        tap_bad_rule = ctrl.Rule(self.tap_ball_threat['good'], press['no'])
+        no_tap_bad_rule = ctrl.Rule(self.no_tap_ball_threat['poor'], press['yes'])
+        tap_bad_rule = ctrl.Rule(self.tap_ball_threat['poor'], press['no'])
         wall_rule_1 = ctrl.Rule(self.wall['poor'], press['yes'])
         wall_rule_2 = ctrl.Rule(self.wall['good'], press['no'])
         composed_proximity_predicate = self.tap_ball_threat['average'] and self.no_tap_ball_threat['average']
-        conditionalTap = press["yes"] if self.lesser_proximity_tap else press["no"]
+        conditionalTap = press["yes"] if self.greater_distance_tap else press["no"]
         proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
         rules = [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2, proximity_rule]
         return rules
