@@ -27,7 +27,8 @@ class BasePlayer:
         pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
         pressing.input['wall'] = self.game.bird.y
         no_tap_dist, tap_dist = self._distance_nearest_ball()
-        pressing.input['no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
+        pressing.input[
+            'no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
         pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
         pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
         pressing.compute()

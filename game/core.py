@@ -90,7 +90,7 @@ class Game:
 
         for ball in self.balls:
             if abs(ball - self.bird) < self.obstacle_diam/2 + self.proximity_threshold:
-                draw(False)
+                self.draw(False)
                 return
 
         self.draw(True)
