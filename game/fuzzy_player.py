@@ -6,7 +6,6 @@ import numpy as np
 from skfuzzy import control as ctrl
 from freegames import vector
 
-
 # this player doesn'take left movimentation in account when making a decision.
 class BasePlayer:
 
@@ -27,12 +26,12 @@ class BasePlayer:
         pressing = ctrl.ControlSystemSimulation(pressing_ctrl)
         pressing.input['wall'] = self.game.bird.y
         no_tap_dist, tap_dist = self._distance_nearest_ball()
-        pressing.input[
-            'no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
+        pressing.input['no_tap_bad'] = no_tap_dist  # parameter = the distance to the nearest ball if no tap is performed
         pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
-        pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False)  # proximity = the actual sum of the distance to all points
+        pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False) # proximity = the actual sum of the distance to all points
         pressing.compute()
         print(pressing.output['press'])
+        print(pressing.print_state())
         if pressing.output['press'] > 0.5:
             self.game.tap()
 
@@ -88,7 +87,8 @@ class BasePlayer:
         tap_bad_rule = ctrl.Rule(self.tap_ball_threat['poor'], press['no'])
         wall_rule_1 = ctrl.Rule(self.wall['poor'], press['yes'])
         wall_rule_2 = ctrl.Rule(self.wall['good'], press['no'])
-        composed_proximity_predicate = self.tap_ball_threat['average'] and self.no_tap_ball_threat['average']
+        composed_proximity_predicate = self.tap_ball_threat['average'] or self.tap_ball_threat['good']
+        composed_proximity_predicate = composed_proximity_predicate and (self.no_tap_ball_threat['average'] or self.no_tap_ball_threat['good'])
         conditionalTap = press["yes"] if self.greater_distance_tap else press["no"]
         proximity_rule = ctrl.Rule((composed_proximity_predicate and self.proximity['poor']), conditionalTap)
         rules = [no_tap_bad_rule, tap_bad_rule, wall_rule_1, wall_rule_2, proximity_rule]
