@@ -6,6 +6,7 @@ import numpy as np
 from skfuzzy import control as ctrl
 from freegames import vector
 
+
 # this player doesn'take left movimentation in account when making a decision.
 class BasePlayer:
 
@@ -36,7 +37,7 @@ class BasePlayer:
             self.game.tap()
 
     def _wall_antecedent(self):
-        wall = ctrl.Antecedent(np.arange(self.game.ground, self.game.ceil, 1), "wall")
+        wall = ctrl.Antecedent(np.arange(self.game.ground, self.game.ceil, 100), "wall")
         wall.automf(3)
         return wall
 
@@ -77,9 +78,15 @@ class BasePlayer:
         tap_option_yes = vector(self.game.bird.x, self.game.bird.y + self.game.vy + self.game.tapY_mov)
         absolute_distance_tp_no = lambda ball: abs(ball - tap_option_no)
         absolute_distance_tp_yes = lambda ball: abs(ball - tap_option_yes)
-        balls_after_tic = list(map(lambda ball: ball + vector(self.game.obstacle_speed, 0), self.game.balls))
-        no_tap_dist = abs(min(balls_after_tic, key=absolute_distance_tp_no))
-        tap_dist = abs(min(balls_after_tic, key=absolute_distance_tp_yes))
+        balls_in_front = lambda ball: ball.x + self.game.obstacle_diam/2 >= self.game.bird.x + self.game.FLAPPY_DIAMETER/2
+        balls_after_tic = (map(lambda ball: ball + vector(self.game.obstacle_speed, 0), self.game.balls))
+        balls_in_front_after_tic = list(filter(balls_in_front, balls_after_tic))
+
+        if len(balls_in_front_after_tic) == 0:
+            balls_in_front_after_tic = balls_after_tic
+
+        no_tap_dist = abs(min(balls_in_front_after_tic, key=absolute_distance_tp_no))
+        tap_dist = abs(min(balls_in_front_after_tic, key=absolute_distance_tp_yes))
         return no_tap_dist, tap_dist
 
     def generate_rules(self, press):

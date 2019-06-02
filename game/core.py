@@ -22,7 +22,7 @@ from game.fuzzy_player import BasePlayer
 
 class Game:
     FLAPPY_DIAMETER = 10
-    #spawn rate = 0 a 10 (0% a 100%) inteiros
+    #spawn rate = 0 a 20 (0% a 100% - >) inteiros
     def __init__(self, ceil, ground, vy, tapY_mov, obstacle_diameter, refresh_timeout_ms, obstac_spawn_rate, obstacle_speed, birdx, birdy, proximity_threshold):
         self.bird = vector(birdx, birdy)
         self.proximity_threshold = proximity_threshold
@@ -76,7 +76,7 @@ class Game:
         for ball in self.balls:
             ball.x += self.obstacle_speed #-3
 
-        if randrange(11) <= self.obsta_spawn_rate:
+        if randrange(21) <= self.obsta_spawn_rate:
             y = randrange(self.ground+1, self.ceil-1)
             ball = vector(self.ceil-1, y)
             self.balls.append(ball)
@@ -89,7 +89,7 @@ class Game:
             return
 
         for ball in self.balls:
-            if abs(ball - self.bird) < self.obstacle_diam/2 + self.proximity_threshold:
+            if abs(ball - self.bird) < self.obstacle_diam/2 + 5:
                 self.draw(False)
                 return
 
