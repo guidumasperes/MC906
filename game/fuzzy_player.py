@@ -18,9 +18,9 @@ class BasePlayer:
 
     def perform_a_play(self):
         self.proximity = self._ball_proximity_antecedent()
-        press = ctrl.Consequent(np.arange(0, 1.25, 0.25), 'press')
+        press = ctrl.Consequent(np.arange(0, 11, 1), 'press')
         press['no'] = fuzz.trimf(press.universe, [0, 0, 0.5])
-        press["maybe"] = fuzz.trimf(press.universe, [0, 0.5, 1])
+        press["maybe"] = fuzz.trimf(press.universe, [0.4, 0.5, 0.5])
         press['yes'] = fuzz.trimf(press.universe, [0.5, 1, 1])
         rules = self.generate_rules(press)
         pressing_ctrl = ctrl.ControlSystem(rules)
