@@ -6,7 +6,6 @@ import numpy as np
 from skfuzzy import control as ctrl
 from freegames import vector
 
-
 # this player doesn'take left movimentation in account when making a decision.
 class BasePlayer:
 
@@ -31,8 +30,6 @@ class BasePlayer:
         pressing.input['tap_bad'] = tap_dist  # parameter =  the distance to the nearest ball if tap no tap is performed
         pressing.input['proximity'] = self._sum_distance_to_obstacles(self.game.bird, after_timeout=False) # proximity = the actual sum of the distance to all points
         pressing.compute()
-        print(pressing.output['press'])
-        print(pressing.print_state())
         if pressing.output['press'] > 0.5:
             self.game.tap()
 

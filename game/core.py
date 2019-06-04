@@ -19,6 +19,16 @@ from turtle import *
 from freegames import vector
 from game.fuzzy_player import BasePlayer
 
+# time alive x ball spawn time
+# time alive x proximity threshold
+# avg time and only wall heuristic
+
+# box plot time alive % porcentagem
+# heat map colision times per coordinate (hexagon plot)
+# matrix correlation spawn time, time alive,obstacle diameter, fall speed, obstacle speed, fall speed
+
+#overlap
+
 
 class Game:
     FLAPPY_DIAMETER = 10
