@@ -38,6 +38,17 @@ def colision_coordinates_plot():
     flappy_game = Game(200, -200, -5, 30, 20, 1, 1, -3, 0, 0, 5, True)
     flappy_game.game_main_loop()
 
+def plot_spawn_time_metric():
+    spt = []
+    tal = []
+    with open("data/spawnxtimealive","r") as f:
+        for line in f.readlines():
+            data = line.split(",")
+            tal.append(data[0])
+            spt.append(data[1])
+
+    plt.scatter(spt, tal, alpha=0.5)
+    plt.show()
 
 if __name__ == '__main__':
-    colision_coordinates_plot()
+    plot_spawn_time_metric()
