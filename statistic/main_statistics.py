@@ -60,7 +60,7 @@ def plot_spawn_time_metric():
             spt.append(round(float(data[1]), 3))
     plt.title("tempo de colisão x taxa de geração de obstáculos")
     plt.ylabel("tempo para colidir (s)")
-    plt.xlabel("chance de colisão por refresh(%)")
+    plt.xlabel("chance de aparecimento de obstáculo por refresh(%)")
     plt.scatter(spt, tal, alpha=0.3)
     plt.savefig("plots/spawnxcolisao")
 
@@ -150,6 +150,6 @@ def coefficients_correlations():
 if __name__ == '__main__':
     # histogram_coolision_plot()
     # plot_box_plot_time_alive()
-    # plot_spawn_time_metric()
+    plot_spawn_time_metric()
     # plot_proximity_threshold_metric()
-    coefficients_correlations()
+    #coefficients_correlations()
