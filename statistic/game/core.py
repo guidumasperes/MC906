@@ -29,7 +29,8 @@ class Game:
     # spawn rate = 0 a 20 (0% a 100% - >) inteiros
     def __init__(self, ceil, ground, vy, tapY_mov, obstacle_diameter, refresh_timeout_ms, obstac_spawn_rate,
                  obstacle_speed, birdx, birdy, proximity_threshold, extracting_metrics=False):
-
+        self.start_birdx = birdx
+        self.start_birdy = birdy
         self.time = time()
         self.in_game = True
         self.bird = vector(birdx, birdy)
@@ -95,9 +96,12 @@ class Game:
         if not self.inside(self.bird):
             self.draw(False)
             self.in_game = False
-            self.time = time() -self.time
-            with open('data/colisioncoordinates', 'a') as f:
-                f.write("{}\n".format(self.bird.y))
+            self.time = time() - self.time
+            with open('data/coeficientscorrelation', 'a') as f:
+                f.write("{},{},{},{},{},{},{}\n".format(self.start_birdy, self.obsta_spawn_rate,
+                                                        self.obstacle_diam, self.obstacle_speed, self.vy,
+                                                        self.proximity_threshold, self.time))
+
                 f.flush()
                 f.close()
                 print("escrevi")
@@ -107,8 +111,12 @@ class Game:
             if abs(ball - self.bird) < self.obstacle_diam / 2 + 5:
                 self.draw(False)
                 self.time = time() - self.time
-                with open('data/colisioncoordinates', 'a') as f:
-                    f.write("{}\n".format(self.bird.y))
+                with open('data/coeficientscorrelation', 'a') as f:
+                    f.write(
+                        "{},{},{},{},{},{},{}\n".format(self.start_birdy, self.obsta_spawn_rate,
+                                                        self.obstacle_diam, self.obstacle_speed, self.vy,
+                                                        self.proximity_threshold, self.time))
+
                     f.flush()
                     f.close()
                     print("escrevi")

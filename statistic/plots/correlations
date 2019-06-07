@@ -1,0 +1,8 @@
+coeficientes de correlacao com o tempo de vida
+
+relacao entre posicao inicial do passaro (y) e tempo de sobrevivencia: 0.1044211071979798 (posicao mais para cima)
+relacao entre chance de spawn de bolas por timeout e tempo de sobrevivencia: -0.036905935372859695
+relacao entre diametro dos obstaculos e tempo de sobrevivencia: -0.12785617304585112
+relacao entre velocidade do obstaculo e tempo de sobrevivencia: -0.5949190655224796
+relacao entre velocidade do passaro (vy) e tempo de sobrevivencia: -0.0258234891028341
+relacao entre o threhold de proximidade do obstaculo e tempo de sobrevivencia: 0.01273120531741655
