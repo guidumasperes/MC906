@@ -1,2 +1,2 @@
 # MC906
-AI project using fuzzy logic
+AI projects
